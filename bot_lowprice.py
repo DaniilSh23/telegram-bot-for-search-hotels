@@ -21,30 +21,28 @@ def send_welcome(message):
 
 @bot.message_handler(commands='lowprice')
 def send_lowprice(message):
-
     city = 'Введите город поиска: '
     bot.send_message(message.chat.id, city)
-    bot.register_message_handler(message, city_reg)
+    bot.register_next_step_handler(message, city_reg)
 
 
-@bot.message_handler(func=lambda message: True)
 def city_reg(message):
     print('its city_reg')
     user_input_dct['city'] = message.text
     check_in = 'Введите дату заезда в формате (ГГГГ-ММ-ДД): '
     bot.send_message(message.chat.id, check_in)
-    bot.register_message_handler(message, check_in_f)
+    bot.register_next_step_handler(message, check_in_f)
 
 
-@bot.message_handler(func=lambda message: True)
 def check_in_f(message):
     print('its check_in_f')
     user_input_dct['check_in'] = message.text
     check_out = 'Введите дату выезда в формате (ГГГГ-ММ-ДД): '
     bot.send_message(message.chat.id, check_out)
-    bot.register_message_handler(message, check_out)
+    bot.register_next_step_handler(message, check_out_f)
 
-def check_out(message):
+def check_out_f(message):
+    print('its check_out_f')
     user_input_dct['check_out'] = message.text
     date_check_in = datetime.strptime(user_input_dct['check_in'], '%Y-%m-%d')
     date_check_out = datetime.strptime(user_input_dct['check_out'], '%Y-%m-%d')
@@ -52,9 +50,10 @@ def check_out(message):
 
     num_hotels = 'Сколько вывести отелей (лимит: 15 отелей): '
     bot.send_message(message.chat.id, num_hotels)
-    bot.register_message_handler(message, num_hotels)
+    bot.register_next_step_handler(message, num_hotels_f)
 
-def num_hotels(message):
+def num_hotels_f(message):
+    print('its num_hotels_f')
     if int(message.text) > 15:
         bot.send_message(message.chat.id, 'Слишком много отелей...Я выведу 15 :)')
         user_input_dct['num_hotels'] = 15
@@ -62,22 +61,28 @@ def num_hotels(message):
         user_input_dct['num_hotels'] = int(message.text)
     send_photo = 'Будем загружать фото каждого отеля? (Да/Нет): '
     bot.send_message(message.chat.id, send_photo)
-    bot.register_message_handler(message, send_photo)
+    bot.register_next_step_handler(message, send_photo_f)
 
-def send_photo(message):
+
+def send_photo_f(message):
+    print('its send_photo_f')
     if message.text.lower() == 'да':
         user_input_dct['send_photo'] = True
         num_hot_photo = 'Введите количество фото отеля (лимит: 15 фото): '
         bot.send_message(message.chat.id, num_hot_photo)
-        bot.register_message_handler(message, num_hot_photo)
+        bot.register_next_step_handler(message, num_hot_photo_f)
+        print('мы вот после ')
 
-def num_hot_photo(message):
+
+def num_hot_photo_f(message):
+    print('its num_hot_photo_f')
     if int(message.text) > 15:
         bot.send_message(message.chat.id, 'Слишком много фото...Я выведу 15 :)')
         user_input_dct['num_hot_photo'] = 15
     else:
         user_input_dct['num_hot_photo'] = int(message.text)
-        # req_and_answer(message)
+        req_and_answer(message)
+
 
 def req_and_answer(message):
     req_to_site.fst_request_for_destination_id(user_input_dct['city'])
@@ -88,8 +93,10 @@ def req_and_answer(message):
     hotels_lst = sorted(hotels_lst, key=lambda i_hotel: i_hotel['ratePlan']['price']['current'])
     print_info(message, hotels_lst)
 
+
 def print_info(message, hotels_lst):
     for i_num in range(user_input_dct['num_hotels']):
+        bot.send_message(message.chat.id, f'====={i_num + 1} ОТЕЛЬ=====')
         bot.send_message(message.chat.id, f'\nНазвание отеля: {hotels_lst[i_num]["name"]}\n'
               f'Рейтинг отеля: {hotels_lst[i_num]["starRating"]} звёзд\n'
               f'Адрес отеля: {hotels_lst[i_num]["address"]["streetAddress"]}, {hotels_lst[i_num]["address"]["locality"]}, '
@@ -100,9 +107,11 @@ def print_info(message, hotels_lst):
               f'URL адрес отеля: {hotels_lst[i_num]["urls"]}\n')
         if user_input_dct['send_photo']:
             req_to_site.third_request_for_hotels_photo(hotel_id=hotels_lst[i_num]['id'])
-            photo_url_lst = defination_base_info.print_hotel_photo(num_hot_photo=num_hot_photo)
+            photo_url_lst = defination_base_info.print_hotel_photo(num_hot_photo=user_input_dct['num_hot_photo'])
             for i_photo_url in photo_url_lst:
                 bot.send_message(message.chat.id, i_photo_url)
+    else:
+        bot.send_message(message.chat.id, 'Вот, собственно, и Ваш результат. Хорошего отдыха :)')
 
 
 bot.infinity_polling()
