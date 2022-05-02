@@ -1,0 +1,12 @@
+/shelf/
+/workspace.xml
+auth_data.txt
+bot_database.db
+json.json
+logs_command.log
+.idea/
+__pycache__/
+bot_for_send/
+developments_in_code/
+drafts/
+my_bot_changed/
