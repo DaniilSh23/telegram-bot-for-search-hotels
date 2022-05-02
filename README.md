@@ -1,7 +1,7 @@
 # Too Easy Travel - telegram bot v1.0
 - _Дата релиза первой версии: 16.04.2022_ 
 - Python 3.10.1
-- [_Разработчик_](https://github.com/Code0Eyes)
+- [_Разработчик_](https://github.com/DaniilSh23)
 ___
 ##### Библиотеки для работы с ботом
 1. re 
