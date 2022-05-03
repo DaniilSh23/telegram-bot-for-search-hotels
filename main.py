@@ -1,6 +1,6 @@
 import re
 import telebot
-from telebot import util
+from telebot import util, types
 from datetime import datetime
 import database, req_to_site
 from auth_data import TOKEN
@@ -178,8 +178,8 @@ def num_hot_photo_f(message):
 def req_and_answer(message):
     ''' API запросы для получения информации о выбранных отелях '''
 
-    bot.send_message(message.chat.id, 'Ищу отели по вашему запросу\n'
-                                      'Скорость моего ответа зависит от вашего выбора.')
+    bot.send_message(message.chat.id, 'Ищу отели для вас\n'
+                                      'Пожалуйста, подождите :)')
     check_in = datetime.strftime(user_input_dct[f'user_{message.chat.id}']['date_range'][0], '%Y-%m-%d')
     check_out = datetime.strftime(user_input_dct[f'user_{message.chat.id}']['date_range'][1], '%Y-%m-%d')
     destination_id = req_to_site.fst_request_for_destination_id(user_input_dct[f'user_{message.chat.id}']['city'])
@@ -244,8 +244,8 @@ def print_info(message, hotels_lst):
                              f'{hotels_lst[i_num]["ratePlan"]["price"].get("current")}\n' \
                              f'Суммарная стоимость проживания за {user_input_dct[f"user_{message.chat.id}"]["date_difference"]} дней: ' \
                              f'{int(hotels_lst[i_num]["ratePlan"]["price"].get("exactCurrent")) * user_input_dct[f"user_{message.chat.id}"]["date_difference"]}$\n' \
-                             f'URL адрес отеля: https://www.hotels.com/ho\n' \
-                             f'{hotels_lst[i_num].get("urls")}\n'
+                             f'URL адрес отеля: https://www.hotels.com/ho' \
+                             f'{hotels_lst[i_num].get("id")}\n'
             bot.send_message(message.chat.id, answer_to_user)
             its_already_history = ''.join([its_already_history, answer_to_user, '\n'])
             if user_input_dct[f"user_{message.chat.id}"]['send_photo']:
@@ -253,9 +253,14 @@ def print_info(message, hotels_lst):
                     hotel_id=hotels_lst[i_num]['id'], num_hot_photo=user_input_dct[f"user_{message.chat.id}"]['num_hot_photo']
                 )
                 its_already_history = ''.join([its_already_history, 'Ссылки на фото отелей: ', '\n'])
+                media_lst = []
                 for i_photo_url in photo_url_lst:
-                    bot.send_message(message.chat.id, i_photo_url)
+                    # запись ссылки на фото в историю
                     its_already_history = ''.join([its_already_history, i_photo_url, '\n'])
+                    # добавление ссылки на фото в медиа группу с указанием типа
+                    media_lst.append(types.InputMediaPhoto(i_photo_url))
+                # отправка фото отелей, как медиа файлы
+                bot.send_media_group(message.chat.id, media_lst)
         except AttributeError as error:
             with open(file='logs_command.log', mode='a', encoding='UTF-8') as logfile:
                 logfile.write(f'\n{dt_now}|Пользователь id {message.chat.id}|{error}')
