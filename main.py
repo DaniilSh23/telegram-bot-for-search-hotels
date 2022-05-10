@@ -198,7 +198,8 @@ def sort_results(message, hotels_lst):
         hotels_lst = sorted(hotels_lst, key=lambda i_hotel: i_hotel['ratePlan']['price']['current'], reverse=True)
     elif user_input_dct[f'user_{message.chat.id}']['command_flag'] == 'bestdeal':
         # hotels_lst = list(filter(bestdeal_func, hotels_lst))
-        hotels_lst = [bestdeal_func(i_hotel, message) for i_hotel in hotels_lst]    # проверка каждого отеля по критериям bestdeal
+        not_filter_hotels_lst = [bestdeal_func(i_hotel, message) for i_hotel in hotels_lst]    # проверка каждого отеля по критериям bestdeal
+        hotels_lst = list(filter(lambda i_hot: i_hot != None, not_filter_hotels_lst))
         if len(hotels_lst) == 0:   
             bot.send_message(message.chat.id, 'По вашему запросу ничего не найдено.')
             return
